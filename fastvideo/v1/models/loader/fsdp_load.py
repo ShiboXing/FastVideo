@@ -14,8 +14,9 @@ from typing import (Any, Callable, DefaultDict, Dict, Generator, Hashable, List,
 import torch
 from torch import nn
 from torch.distributed import DeviceMesh, init_device_mesh
-from torch.distributed._composable.fsdp import CPUOffloadPolicy, fully_shard
 from torch.distributed._tensor import distribute_tensor
+from torch.distributed.fsdp import CPUOffload as CPUOffloadPolicy
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDPModule
 from torch.nn.modules.module import _IncompatibleKeys
 
 from fastvideo.v1.distributed.parallel_state import (
@@ -169,16 +170,14 @@ def shard_model(
                 shard_condition(n, m)
                 for shard_condition in model._fsdp_shard_conditions
         ]):
-            fully_shard(m, **fsdp_kwargs)
+            model._modules[n] = FSDPModule(
+                m, **fsdp_kwargs)  # Wrap submodule manually
             num_layers_sharded += 1
 
     if num_layers_sharded == 0:
         raise ValueError(
             "No layer modules were sharded. Please check if shard conditions are working as expected."
         )
-
-    # Finally shard the entire model to account for any stragglers
-    fully_shard(model, **fsdp_kwargs)
 
 
 # TODO(PY): device mesh for cfg parallel

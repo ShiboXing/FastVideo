@@ -5,6 +5,8 @@ import logging
 import traceback
 from typing import TYPE_CHECKING, Optional
 
+import torch
+
 # imported by other files, do not remove
 from fastvideo.v1.platforms.interface import _Backend  # noqa: F401
 from fastvideo.v1.platforms.interface import Platform, PlatformEnum
@@ -35,11 +37,9 @@ def cuda_platform_plugin() -> Optional[str]:
             raise e
 
         # CUDA is supported on Jetson, but NVML may not be.
-        import os
 
         def cuda_is_jetson() -> bool:
-            return os.path.isfile("/etc/nv_tegra_release") \
-                or os.path.exists("/sys/class/tegra-firmware")
+            return bool(torch.cuda.is_available())
 
         if cuda_is_jetson():
             is_cuda = True

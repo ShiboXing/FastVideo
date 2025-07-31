@@ -69,8 +69,8 @@ def get_dit_fsdp_kwargs(
     use_lora=False,
     cpu_offload=False,
     master_weight_type="fp32",
+    no_split_modules=None
 ):
-    no_split_modules = get_no_split_modules(transformer)
     if use_lora:
         auto_wrap_policy = fsdp_auto_wrap_policy
     else:
